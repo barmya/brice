@@ -1,0 +1,826 @@
+<html>
+    <head></head>
+    <body>
+        (i)	One server to one client (Same device)
+
+Server.java 
+
+import java.io.*; import java.net.*;
+
+public class Server {
+public static void main(String[] args) { try {
+ServerSocket serverSocket = new ServerSocket(5000); System.out.println("Server is waiting for client..."); Socket socket = serverSocket.accept(); System.out.println("Client connected.");
+
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+String message = input.readLine(); System.out.println("Client: " + message); output.println("Hello from Server");
+
+socket.close(); serverSocket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+ 
+Client.java 
+import java.io.*; import java.net.*;
+
+public class Client {
+public static void main(String[] args) { try {
+Socket socket = new Socket("localhost", 5000);
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+output.println("Hello from Client"); String message = input.readLine();
+System.out.println("Server: " + message);
+
+socket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(ii)	One server to one client (Different devices)
+
+Server.java 
+
+import java.io.*; import java.net.*;
+
+public class Server {
+public static void main(String[] args) { try {
+ServerSocket serverSocket = new ServerSocket(5000);
+ 
+System.out.println("Server is waiting for client..."); Socket socket = serverSocket.accept(); System.out.println("Client connected.");
+
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+String message = input.readLine(); System.out.println("Client: " + message); output.println("Hello from Server");
+
+socket.close(); serverSocket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+
+
+Client.java 
+
+import java.io.*; import java.net.*;
+
+public class Client {
+public static void main(String[] args) { try {
+Socket socket = new Socket("192.168.1.5", 5000);
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+output.println("Hello from Client");
+ 
+String message = input.readLine(); System.out.println("Server: " + message);
+
+socket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+(iii)	One server to multiple clients (Different devices)
+
+Server.java 
+
+import java.io.*; import java.net.*;
+
+public class Server {
+public static void main(String[] args) { try {
+ServerSocket serverSocket = new ServerSocket(5000); System.out.println("Server is waiting for clients..."); while (true) {
+Socket socket = serverSocket.accept(); System.out.println("Client connected."); new ClientHandler(socket).start();
+}
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+ 
+
+class ClientHandler extends Thread { private Socket socket;
+
+public ClientHandler(Socket socket) { this.socket = socket;
+}
+
+public void run() { try {
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+String message = input.readLine(); System.out.println("Client: " + message); output.println("Hello from Server");
+
+socket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+
+Client.java 
+
+import java.io.*; import java.net.*;
+
+public class Client {
+public static void main(String[] args) { try {
+Socket socket = new Socket("192.168.1.5", 5000);
+ 
+BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream())); PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
+
+output.println("Hello from Client"); String message = input.readLine();
+System.out.println("Server: " + message);
+
+socket.close();
+} catch (Exception e) { e.printStackTrace();
+}
+}
+}
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+(i)	RPC-based Calculator in Java (with User Input)
+Server.java 
+
+import java.io.*; import java.net.*;
+
+public class Server {
+public static void main(String[] args) throws Exception { ServerSocket ss = new ServerSocket(5000);
+Socket s = ss.accept();
+BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream())); PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+String[] data = in.readLine().split(" ");
+int a = Integer.parseInt(data[0]), b = Integer.parseInt(data[1]); switch (data[2]) {
+case "+": out.println(a + b); break; case "-": out.println(a - b); break;
+ 
+case "*": out.println(a * b); break;
+case "/": out.println(b != 0 ? a / b : "Error"); break; default: out.println("Invalid Operator");
+}
+s.close(); ss.close();
+}
+}
+
+Client.java 
+
+import java.io.*; import java.net.*;
+
+public class Client {
+public static void main(String[] args) throws Exception { Socket s = new Socket("localhost", 5000);
+BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream())); PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+
+System.out.print("Enter first number: ");
+int a = Integer.parseInt(userInput.readLine()); System.out.print("Enter second number: "); int b = Integer.parseInt(userInput.readLine()); System.out.print("Enter operator (+, -, *, /): "); String op = userInput.readLine();
+
+out.println(a + " " + b + " " + op); System.out.println("Result: " + in.readLine()); s.close();
+}
+}
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
+(ii)	RMI-based Calculator in Java (with User Input)
+
+Calculator.java
+
+import java.rmi.*;
+
+public interface Calculator extends Remote { int add(int a, int b) throws RemoteException;
+int subtract(int a, int b) throws RemoteException; int multiply(int a, int b) throws RemoteException; int divide(int a, int b) throws RemoteException;
+}
+
+
+CalculatorImpl.java 
+
+import java.rmi.*; import java.rmi.server.*;
+
+public class CalculatorImpl extends UnicastRemoteObject implements Calculator { CalculatorImpl() throws RemoteException {}
+public int add(int a, int b) { return a + b; } public int subtract(int a, int b) { return a - b; } public int multiply(int a, int b) { return a * b; }
+public int divide(int a, int b) { return b != 0 ? a / b : 0; }
+}
+
+
+Server.java
+
+import java.rmi.*;
+
+public class Server {
+public static void main(String[] args) throws Exception { Naming.rebind("rmi://localhost/Calculator", new CalculatorImpl());
+ 
+System.out.println("Server is ready.");
+}
+}
+
+Client.java
+
+import java.rmi.*;
+import java.util.Scanner;
+
+public class Client {
+public static void main(String[] args) throws Exception {
+Calculator c = (Calculator) Naming.lookup("rmi://localhost/Calculator"); Scanner sc = new Scanner(System.in);
+
+System.out.print("Enter first number: "); int a = sc.nextInt();
+System.out.print("Enter second number: "); int b = sc.nextInt();
+System.out.print("Enter operator (+, -, *, /): "); char op = sc.next().charAt(0);
+
+int result = switch (op) { case '+' -> c.add(a, b);
+case '-' -> c.subtract(a, b);
+case '*' -> c.multiply(a, b);
+case '/' -> b != 0 ? c.divide(a, b) : Integer.MIN_VALUE;
+default -> throw new IllegalArgumentException("Invalid operator");
+};
+
+System.out.println("Result: " + (result == Integer.MIN_VALUE ? "Error" : result)); sc.close();
+}
+}
+
+
+
+Steps to execute:
+1) Compile all the files
+
+2) If you're using Java 8 or below, you’ll also need to generate the stub file (skeleton interface) using rmic:
+
+rmic CalculatorImpl
+
+3) Run rmiregistry in the same directory (or in background). Open a new CMD window and navigate to the same folder:
+
+cd path\to\RMI_Calculator
+rmiregistry
+
+4) In your original CMD window:
+
+java Server
+
+5) Open another new CMD window, navigate to the same folder, and run:
+
+java Client
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+CORBA
+
+1.	Hello.idl
+
+interface Hello {
+    string sayHello();
+};
+
+2.	Generate Stubs 
+
+idlj -fall Hello.idl
+
+3.	HelloImpl.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+
+public class HelloImpl extends HelloPOA {
+    public String sayHello() {
+        return "Hello from Server!";
+    }
+}
+
+4.	Server.java
+
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+
+public class Server {
+    public static void main(String[] args) throws Exception {
+        ORB orb = ORB.init(args, null);
+        POA rootPOA = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+        rootPOA.the_POAManager().activate();
+
+        HelloImpl hello = new HelloImpl();
+        org.omg.CORBA.Object ref = rootPOA.servant_to_reference(hello);
+
+        String ior = orb.object_to_string(ref);
+        System.out.println("Server is running...");
+        System.out.println("Copy this IOR and paste it into Client.java:");
+        System.out.println(ior);
+
+        orb.run();
+    }
+}
+
+5.	Client.java
+
+import org.omg.CORBA.*;
+
+public class Client {
+    public static void main(String[] args) throws Exception {
+        ORB orb = ORB.init(args, null);
+        
+        // 🔽 Replace this with the actual IOR printed by Server
+        String ior = "IOR:0000000000";
+
+        org.omg.CORBA.Object obj = orb.string_to_object(ior);
+        Hello hello = HelloHelper.narrow(obj);
+
+        System.out.println(hello.sayHello());
+    }
+}
+
+
+
+Steps to execute:
+
+1) CORBA support has been removed in Java 11+, so stick to Java 8 for full support.
+
+Download and install from: https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html
+
+2) Create all the required files inside the main folder.
+
+3) Also create a ‘HelloApp’ folder inside the main folder. And paste the ‘Hello.idl’ file inside it. Run this command on the terminal for ‘HelloApp’ directory.
+
+idlj -fall Hello.idl
+
+4) Copy all the files that are generated inside the ‘HelloApp’ folder and paste them inside the main folder.
+
+5) Compile the Server.java, HelloImpl.java.
+
+6) Run the server:
+
+java Server
+
+7) After running java Server, it will print something like:
+
+IOR:000000000000003...
+
+8) Copy the full string and paste it into Client.java
+
+9) Compile Client.java
+
+10) In another terminal, run:
+
+java Client
+
+
+
+
+
+Group Communication
+
+1.	Server.java 
+
+import java.io.*; import java.net.*; import java.util.*;
+
+public class Server {
+static Set<PrintWriter> clients = new HashSet<>(); public static void main(String[] args) throws Exception {
+Scanner sc = new Scanner(System.in); System.out.print("Enter number of clients: "); int numClients = sc.nextInt();
+
+ServerSocket ss = new ServerSocket(5000);
+System.out.println("Server started...");
+
+while (clients.size() < numClients) { Socket s = ss.accept();
+PrintWriter out = new PrintWriter(s.getOutputStream(), true); clients.add(out);
+new Thread(() -> {
+try (BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()))) { String msg;
+while ((msg = in.readLine()) != null)
+for (PrintWriter client : clients) client.println(msg);
+} catch (Exception e) { clients.remove(out); }
+}).start();
+System.out.println("Client connected. Total clients: " + clients.size());
+}
+System.out.println("All clients connected. Chat started...");
+}
+}
+
+
+
+2.	Client.java
+
+import java.io.*; import java.net.*;
+
+public class Client {
+public static void main(String[] args) throws Exception { Socket s = new Socket("localhost", 5000);
+BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream())); PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+System.out.print("Enter your name: "); String name = userInput.readLine(); out.println(name + " joined the chat");
+
+new Thread(() -> {
+try { String msg; while ((msg = in.readLine()) != null) System.out.println(msg); } catch (Exception e) {}
+}).start();
+
+String msg;
+while ((msg = userInput.readLine()) != null) out.println(name + ": " + msg); s.close();
+}
+}
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Lamport Algorithm
+
+LamportAlgorithm.java
+
+import java.util.*;
+
+public class LamportAlgorithm { static int clock = 0;
+
+static void sendEvent(String msg) { clock++;
+System.out.println("Send: " + msg + " | Clock: " + clock);
+}
+
+static void receiveEvent(String msg, int senderClock) { clock = Math.max(clock, senderClock) + 1; System.out.println("Receive: " + msg + " | Clock: " + clock);
+}
+
+public static void main(String[] args) { Scanner sc = new Scanner(System.in);
+System.out.print("Enter number of events: "); int n = sc.nextInt();
+sc.nextLine();
+
+for (int i = 0; i < n; i++) {
+System.out.print("Enter event type (send/receive): "); String type = sc.nextLine();
+if (type.equalsIgnoreCase("send")) { System.out.print("Enter message: "); String msg = sc.nextLine(); sendEvent(msg);
+} else if (type.equalsIgnoreCase("receive")) { System.out.print("Enter message: "); String msg = sc.nextLine(); System.out.print("Enter sender's clock: "); int senderClock = sc.nextInt(); sc.nextLine();
+receiveEvent(msg, senderClock);
+}
+}
+}
+}
+
+
+
+Inputs to the code:
+
+Enter number of events: 4
+Enter event type (send/receive): send
+Enter message: Ping
+Enter event type (send/receive): send
+Enter message: Request
+Enter event type (send/receive): receive
+Enter message: Ack
+Enter sender's clock: 5
+Enter event type (send/receive): receive
+Enter message: Response
+Enter sender's clock: 3
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Ring Algorithm
+
+RingAlgorithm.java
+
+import java.util.*;
+
+public class RingAlgorithm { static int[] nodes;
+static boolean[] active;
+
+static void startElection(int initiator) {
+System.out.println("Node " + nodes[initiator] + " started election"); int current = initiator;
+int leader = nodes[initiator];
+
+do {
+current = (current + 1) % nodes.length; if (active[current]) {
+System.out.println("Message passed from " + nodes[initiator] + " to " + nodes[current]); if (nodes[current] > leader) leader = nodes[current];
+}
+} while (current != initiator);
+
+System.out.println("Leader elected: " + leader);
+}
+
+public static void main(String[] args) { Scanner sc = new Scanner(System.in);
+System.out.print("Enter number of nodes: "); int n = sc.nextInt();
+nodes = new int[n]; active = new boolean[n];
+
+System.out.print("Enter node IDs: "); for (int i = 0; i < n; i++) {
+nodes[i] = sc.nextInt(); active[i] = true;
+}
+
+System.out.print("Enter initiator node index (0 to " + (n - 1) + "): "); int initiator = sc.nextInt();
+startElection(initiator);
+}
+}
+
+
+Inputs to the code:
+
+Enter number of nodes: 4
+Enter node IDs: 11 22 33 44
+Enter initiator node index (0 to 3): 1
+
+
+
+
+Ricart Agarwala Algorithm
+
+import java.util.*;
+
+public class RicartAgrawala { static int clock = 0;
+
+static void requestCS(int id) { clock++;
+System.out.println("Process " + id + " requesting CS at clock " + clock);
+}
+
+static void receiveRequest(int id, int senderClock) { clock = Math.max(clock, senderClock) + 1;
+System.out.println("Process " + id + " received request at clock " + clock);
+}
+
+static void releaseCS(int id) { clock++;
+System.out.println("Process " + id + " released CS at clock " + clock);
+}
+
+public static void main(String[] args) { Scanner sc = new Scanner(System.in); System.out.print("Enter process ID: "); int id = sc.nextInt();
+
+requestCS(id);
+
+System.out.print("Enter sender's clock: ");
+ 
+int senderClock = sc.nextInt(); receiveRequest(id, senderClock);
+
+releaseCS(id);
+}
+}
+
+
+
+Inputs to the code:
+
+Enter process ID: 2
+Enter sender's clock: 3
+
+
+Load Balancing
+
+LoadBalancing.java
+
+import java.util.*; 
+ 
+public class LoadBalancing { 
+    static List<String> servers = new ArrayList<>(); 
+ 
+    static void addServer(String s) { 
+        servers.add(s); 
+        System.out.println("Server added: " + s); 
+    } 
+ 
+    static void removeServer(String s) { 
+        if (servers.remove(s)) System.out.println("Server removed: " + s); 
+        else System.out.println("Server not found"); 
+    } 
+ 
+    static void showServers() { 
+        System.out.println("Active servers: " + servers); 
+    } 
+ 
+    public static void main(String[] args) { 
+        Scanner sc = new Scanner(System.in); 
+        while (true) { 
+            System.out.print("1-Add Server 2-Remove Server 3-Show Servers 4-Exit: "); 
+            int ch = sc.nextInt(); 
+            sc.nextLine(); 
+            if (ch == 1) { 
+                System.out.print("Enter server name: "); 
+                addServer(sc.nextLine()); 
+            } else if (ch == 2) { 
+                System.out.print("Enter server name: "); 
+                removeServer(sc.nextLine()); 
+            } else if (ch == 3) showServers(); 
+            else break; 
+        } 
+    } 
+}
+
+
+Inputs to the code:
+
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 1
+Enter server name: Server1
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 1
+Enter server name: Server2
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 3
+Active servers: [Server1, Server2]
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 2
+Enter server name: Server1
+Server removed: Server1
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 3
+Active servers: [Server2]
+1-Add Server 2-Remove Server 3-Show Servers 4-Exit: 4
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Distributed Shared Memory
+
+SharedMemoryServer.java
+
+import java.io.*;
+import java.net.*;
+
+public class SharedMemoryServer {
+    private static int sharedVariable = 50;  // Initial value of shared variable
+
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(5000)) {
+            System.out.println("SharedMemoryServer started on port 5000...");
+            while (true) {
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("Client connected...");
+                new ClientHandler(clientSocket).start();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    private static class ClientHandler extends Thread {
+        private Socket clientSocket;
+
+        public ClientHandler(Socket socket) {
+            this.clientSocket = socket;
+        }
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
+
+                String command;
+                while ((command = in.readLine()) != null) {
+                    if (command.equalsIgnoreCase("get")) {
+                        out.println("Accessed Shared Variable: " + sharedVariable);
+                    } else if (command.startsWith("set")) {
+                        try {
+                            int newValue = Integer.parseInt(command.split(" ")[1]);
+                            sharedVariable = newValue;
+                            out.println("Updated Shared Variable: " + sharedVariable);
+                        } catch (Exception e) {
+                            out.println("Invalid set command. Use: set <integer_value>");
+                        }
+                    } else if (command.equalsIgnoreCase("exit")) {
+                        out.println("Disconnecting...");
+                        break;
+                    } else {
+                        out.println("Invalid Command");
+                    }
+                }
+                clientSocket.close();
+                System.out.println("Client disconnected...");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+SharedMemoryClient.java
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class SharedMemoryClient {
+    public static void main(String[] args) {
+        try (Socket socket = new Socket("localhost", 5000);
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+             Scanner scanner = new Scanner(System.in)) {
+
+            System.out.println("Connected to SharedMemoryServer. Type 'exit' to quit.");
+
+            while (true) {
+                System.out.print("Enter Command (get/set/exit): ");
+                String command = scanner.nextLine();
+                out.println(command);
+
+                if (command.equalsIgnoreCase("exit")) {
+                    System.out.println("Disconnecting...");
+                    break;
+                }
+                String response = in.readLine();
+                System.out.println(response);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+Inputs to the code:
+
+get
+set 75
+get
+set 120
+get
+exit
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Drive Link for JDK 8:
+
+https://drive.google.com/drive/folders/1v4aotvMCSw30F2ixmnXTGb1sig69_f5T
+
+Steps to configure JDK:
+
+1) Extract the files add the JAVA folder in Program Files (x86).
+
+2) Go to Environmental Variables add the following in the System and the User Path variable:
+
+C:\Program Files (x86)\Java\jdk1.8.0_321\bin
+
+3) Open cmd and put the following command to check if the version of java is showing or not:
+
+java -version
+
+
+
+
+CORBA 2
+
+Client.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.CosNaming.*;
+
+public class Client {
+    public static void main(String[] args) {
+        try {
+            ORB orb = ORB.init(args, null);
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+            Hello helloRef = HelloHelper.narrow(ncRef.resolve_str("Hello"));
+            String response = helloRef.sayHello();
+            System.out.println("Response from Server: " + response);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+Server.java
+
+import HelloApp.*;
+import org.omg.CORBA.*;
+import org.omg.PortableServer.*;
+import org.omg.CosNaming.*;
+
+class HelloImpl extends HelloPOA {
+    public String sayHello() {
+        return "Hello, World from CORBA!";
+    }
+}
+
+public class Server {
+    public static void main(String[] args) {
+        try {
+            ORB orb = ORB.init(args, null);
+            POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
+            rootpoa.the_POAManager().activate();
+            HelloImpl helloImpl = new HelloImpl();
+            org.omg.CORBA.Object ref = rootpoa.servant_to_reference(helloImpl);
+            Hello helloRef = HelloHelper.narrow(ref);
+            org.omg.CORBA.Object objRef = orb.resolve_initial_references("NameService");
+            NamingContextExt ncRef = NamingContextExtHelper.narrow(objRef);
+            NameComponent path[] = ncRef.to_name("Hello");
+            ncRef.rebind(path, helloRef);
+            System.out.println("Server is running...");
+            orb.run();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+Steps:
+
+Java CORBA Setup Guide (Using Java 8)
+STEP 0: Install Java 8
+Go to: https://www.oracle.com/in/java/technologies/javase/javase8-archive-downloads.html
+Download the Java SE Development Kit 8 (choose the Windows x64 installer if applicable).
+Install it and note the installation path, usually:
+C:\Program Files\Java\jdk1.8.0_xxx
+STEP 1: Set Environment Variables
+Option A: Permanent Setup (Recommended)
+1. Open System Properties → Environment Variables
+2. Add a new System Variable: JAVA_HOME = C:\Program Files\Java\jdk1.8.0_xxx
+3. Edit the Path variable and add: %JAVA_HOME%\bin (move this to the top of the list)
+
+Option B: Temporary Setup (No Admin Rights)
+In every new terminal, run:
+set PATH=C:\Program Files\Java\jdk1.8.0_xxx\bin;%PATH%
+STEP 2: Generate Java Stubs from IDL
+Assuming you have Hello.idl in your working directory, run:
+idlj -fall Hello.idl
+This generates a folder HelloApp/ with interface code.
+STEP 3: Compile Java Files
+Compile everything using:
+javac HelloApp/*.java Server.java Client.java
+STEP 4: Start CORBA Naming Service
+Open a new terminal and run:
+tnameserv -ORBInitialPort 1050
+Keep this terminal open.
+STEP 5: Run the Server
+Open another new terminal and run:
+java Server -ORBInitialPort 1050 -ORBInitialHost localhost
+STEP 6: Run the Client
+Open yet another terminal and run:
+java Client -ORBInitialPort 1050 -ORBInitialHost localhost
+
+
+
+    </body>
+</html>
